@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
+
 import TheTable from '@/components/TheTable'
 import TheForm from '@/components/TheForm'
 
@@ -40,51 +42,51 @@ export default {
 
   data () {
     return {
-      showForm: false,
-      products: this.getInitialProducts()
+      showForm: false
     }
   },
 
-  methods: {
-    getInitialProducts () {
-      let products
-      try {
-        const data = window.sessionStorage.getItem('products')
-        products = JSON.parse(data)
-      } catch (e) {
-        console.error(e)
-      }
-      return products || []
-    },
+  computed: {
+    ...mapState([
+      'products'
+    ])
+  },
 
-    setProducts () {
-      const data = JSON.stringify(this.products)
-      window.sessionStorage.setItem('products', data)
-    },
+  methods: {
+    ...mapActions([
+      'setProducts'
+    ]),
 
     addProduct (product) {
-      this.products.push(product)
+      const products = [...this.products, product]
+      this.setProducts({ products })
     },
 
     removeProduct (date) {
       if (!confirm("Are you sure?")) {
         return
       }
-      const index = this.products.findIndex((product) => {
-        return product.date === date
+
+      const products = [...this.products]
+      const index = products.findIndex((p) => {
+        return p.date === date
       })
       if (index === -1) {
         alert("Product not found")
         return
       }
-      this.products.splice(index, 1)
+
+      products.splice(index, 1)
+      this.setProducts({ products })
     },
 
     editProduct (ev, productDate, fieldName) {
-      const product = this.products.find((product) => {
-        return product.date === productDate
+      const products = [...this.products]
+      const product = products.find((p) => {
+        return p.date === productDate
       })
       product[fieldName] = ev.target.value
+      this.setProducts({ products })
     },
 
     toggleShowForm () {
@@ -93,13 +95,6 @@ export default {
 
     getFields () {
       return FIELDS
-    }
-  },
-
-  watch: {
-    'products': {
-      handler: 'setProducts',
-      deep: true
     }
   }
 }
